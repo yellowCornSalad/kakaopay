@@ -10,7 +10,8 @@
 
 ########################################################################
 ############################## VARIABLE ################################
-###################################################Program Files\pms_big_fix_agent_msi?
+########################################################################
+#Program Files\pms_big_fix_agent_msi?
 
 
 
@@ -24,7 +25,7 @@ get_pms_file() {
     echo "==================download start==================="
   
     # 'test.msi'라는 이름으로 파일 다운로드 진행  
-    wget -o pms_big_fix_agent.msi "https://secfm.kakaopaycorp.net/tinyfilemanager.php?p=%EC%97%94%EB%93%9C%ED%8F%AC%EC%9D%B8%ED%8A%B8%EB%B3%B4%EC%95%88%2FPMS%2FWindows&dl=BigFixAgent.msi" -P "$PROGRAM_FILES"
+    wget -o pms_big_fix_agent.msi "https://secfm.kakaopaycorp.net/tinyfilemanager.php?p=%EC%97%94%EB%93%9C%ED%8F%AC%EC%9D%B8%ED%8A%B8%EB%B3%B4%EC%95%88%2FPMS%2FWindows&dl=BigFixAgent.msi" -P $PROGRAM_FILES
 }
 
 # 다운로드 경로에 있는 파일의 hash값과 파일의 hash값이 일치하면 실행(실행명령어 exec와 유사)
@@ -34,15 +35,21 @@ check_hash_data() {
     #   1. 다운로드 경로에 있는 파일의 해쉬 값 == file_hash_result
     #   2. 작업관리자에서 동작하고 있는 프로그램의 값 == file_hash_result
 
-    if [ -e "$FILE" ]; then
+    if [ -e $FILE ]; then
         # echo "$File \test.msi\ exists" # 파일 경로 입력
     
     # 관리자모드로 파워쉘 실행
     # 자동으로  '확인' 클릭될 수 있도록 조치필요 (-y 옵션값처럼 조치필요 | 안될 시 키보드 이벤트로 왼쪽 클릭, 엔터 클릭)
       start-process powershell -verb runAs /qn
-      cd "$PROGRAM_FILES" || exit   # 파일이 다운로드 된 위치로 이동
+      cd $PROGRAM_FILES || exit   # 파일이 다운로드 된 위치로 이동
       # install.log에 log수집
-      msiexec /i C:\Users\Program Files\pms_big_fix_agent.msi /l*v C:\Windows\Logs.\pms_installer.log AGREETOLICENSE="yes"
+
+      # msiexec 옵션: 
+      #   - qr : 감소된 UI-설치 및 종료 모두 UI나옴
+      #   - qn+ : UI없음, 설치 종료 시 모달 대화상자
+      #   - qb+ : 기본UI, 설치 종료 시 모달 대화상자 노출, 설치 취소하면 모달 대화상자 노출X
+      msiexec /i 'C:\Program Files\pms_big_fix_agent.msi' AGREETOLICENSE="yes" /qb+ # qn+ : 설치실패
+      # msiexec /i C:\Users\Program Files\pms_big_fix_agent.msi /l*v C:\Windows\Logs.\pms_installer.log AGREETOLICENSE="yes"
     # 파일이 실행되지 않는다면
     else
       # echo "file does not run"
@@ -59,6 +66,14 @@ find_hash_result() {
 }
 
 ############### if not downloaded 예외처리
+check_correctly_installed() {
+  if [ -e "C:\Program Files (x86)\BigFix Enterprise\BES Client\BESClient.exe" && "C:\Program Files (x86)\BigFix Enterprise\BES Client"]; then
+  $msg_correct = New-Object -ComObject WScript.Shell
+  $msg_correct.POpup("정상설치되었습니다.", 5, "설치 완료", 48)
+  else
+  $msg_correct.POpup("비정상 설치", 5, "설치 실패", 48)
+  fi
+}
 
 check_correctly_installed_1() { # 정상적으로 설치되었는지 확인(작업관리자 실행중인 프로그램에서 동일한 해쉬 값 조회)
   if [ -e ${FILE_HASH_RESULT} ]; then # 설치 완료된 파일 경로 입력
@@ -70,8 +85,8 @@ check_correctly_installed_1() { # 정상적으로 설치되었는지 확인(작�
 check_correctly_installed_2() {
   if [ -e ${hashed_data} == ${FILE_HASH_RESULT}]; then
   echo "installed correctly"
+  fi
 }
-
 
 ########################################################################
 ############################### SCRIPT #################################
@@ -80,9 +95,12 @@ check_correctly_installed_2() {
 FILE=C:\Program Files\pms_big_fix_agent.msi
 PROGRAM_FILES=C:\Program Files\
 # file="C:\Users\kakaopay\Downloads\test.msi"
+BES_SERVICE = C:\Program Files (x86)\BigFix Enterprise\BES Client\BESClient.exe
+BES_UI = C:\Program Files (x86)\BigFix Enterprise\BES Client
 
 # pms파일의 해쉬값
 FILE_HASH_RESULT="aa2465dceaba49f4ca64b41b7fc7ba044d998822"
-get_pms_file
-check_hash_data
-check_correctly_installed
+get_pms_files
+
+# check_hash_data
+# check_correctly_installed
