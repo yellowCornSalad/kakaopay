@@ -68,10 +68,9 @@ find_hash_result() {
 ############### if not downloaded 예외처리
 check_correctly_installed() {
   if [ -e "C:\Program Files (x86)\BigFix Enterprise\BES Client\BESClient.exe" && "C:\Program Files (x86)\BigFix Enterprise\BES Client"]; then
-  $msg_correct = New-Object -ComObject WScript.Shell
-  $msg_correct.POpup("정상설치되었습니다.", 5, "설치 완료", 48)
+  powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('파일이 정상적으로 설치되었습니다.','설치완료')}"
   else
-  $msg_correct.POpup("비정상 설치", 5, "설치 실패", 48)
+  powershell -WindowStyle hidden -Command "& {[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('파일이 정상적으로 설치되지 않았습니다.','설치실패')}"
   fi
 }
 
